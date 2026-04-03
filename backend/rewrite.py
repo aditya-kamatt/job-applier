@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from shared.models import CVDocument, FitAnalysis, JobDescription, RewriteSuggestion
 
 from .gemini_client import GeminiRewriteClient, GeminiRewriteError
+from .text_utils import CANONICAL_TECH_TERMS, display_label_for_term
 
 
 @dataclass(slots=True)
@@ -58,9 +59,12 @@ def _deterministic_rewrite(
 ) -> RewriteSuggestion:
     supported_skills = _build_supported_skill_inventory(cv_document)
     jd_focus = [
-        skill
+        display_label_for_term(skill)
         for skill in job_description.required_skills + job_description.tools_frameworks
-        if skill.lower() in supported_skills
+        if any(
+            variant in supported_skills
+            for variant in CANONICAL_TECH_TERMS.get(skill.lower(), {skill.lower()})
+        ) or skill.lower() in supported_skills
     ]
     jd_focus = list(dict.fromkeys(jd_focus))[:5]
 
@@ -73,12 +77,12 @@ def _deterministic_rewrite(
     if jd_focus:
         summary_focus = ", ".join(jd_focus[:3])
         base_summary_parts.append(
-            f"Strengths most aligned to this role include {summary_focus}"
+            f"My background aligns well with work involving {summary_focus}"
         )
 
-    if cv_document.metrics:
+    if cv_document.experience.bullets:
         base_summary_parts.append(
-            f"Highlighted impact is grounded in existing CV evidence such as {', '.join(cv_document.metrics[:3])}"
+            f"My recent experience includes {cv_document.experience.bullets[0].rstrip('.')}"
         )
 
     rewritten_summary = ". ".join(_sentence_case(part.strip()) for part in base_summary_parts if part.strip()) + "."
@@ -130,6 +134,8 @@ Rules:
 - Do not add tools not already present in the allowed skills lists below.
 - Do not mention missing skills in the rewritten CV.
 - Do not invent employers, projects, metrics, or responsibilities.
+- You may use normalized synonyms for supported tools and concepts, such as 'large language models' for 'LLMs' and 'retrieval-augmented generation' for 'RAG'.
+- Do not introduce adjacent tools that are not supported by the CV.
 
 Allowed summary facts:
 {evidence.allowed_summary_facts}

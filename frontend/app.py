@@ -36,30 +36,26 @@ def render() -> None:
             )
         )
 
-        tab_input, tab_fit, tab_rewrite, tab_message = st.tabs(
-            ["Upload/Input", "Fit Analysis", "CV Improvements", "Outreach Message"]
-        )
+        tab_results, tab_input = st.tabs(["Results", "Upload/Input"])
 
-        with tab_input:
-            st.subheader("Parsed CV")
-            st.json(result["cv_document"])
-            st.subheader("Parsed Job Description")
-            st.json(result["job_description"])
-
-        with tab_fit:
+        with tab_results:
             fit = result["fit_analysis"]
+            rewrite = result["rewrite_suggestion"]
+            message = result["linkedin_message"]
+            skills_change_message = rewrite.get("skills_change_message")
+
+            st.subheader("Fit Analysis")
             col1, col2 = st.columns(2)
             col1.metric("Overall Fit", fit["overall_fit_score"])
             col2.metric("Estimated ATS Score", fit["estimated_ats_score"])
-            st.write("Strong sections:", ", ".join(fit["strong_sections"]) or "None")
-            st.write("Weak sections:", ", ".join(fit["weak_sections"]) or "None")
+            #st.write("Strong sections:", ", ".join(fit["strong_sections"]) or "None")
+            #st.write("Weak sections:", ", ".join(fit["weak_sections"]) or "None")
             st.write("Missing keywords:", ", ".join(fit["missing_keywords"]) or "None")
-            st.json(fit["editable_recommendations"])
+            #st.json(fit["editable_recommendations"])
 
-        with tab_rewrite:
-            rewrite = result["rewrite_suggestion"]
-            skills_change_message = rewrite.get("skills_change_message")
-            st.info("Only Summary and Skills are editable. All other CV sections are locked.")
+            st.divider()
+            st.subheader("CV Improvements")
+            #st.info("Only Summary and Skills are editable. All other CV sections are locked.")
             if rewrite.get("used_llm"):
                 st.success("Rewrite mode: Gemini-assisted hybrid rewrite")
             else:
@@ -72,7 +68,8 @@ def render() -> None:
                     )
                 )
             st.subheader("Rewritten Summary")
-            st.write(rewrite["rewritten_summary"])
+            #st.caption("Use the built-in copy icon in the top-right of the summary box.")
+            st.code(rewrite["rewritten_summary"], language=None, wrap_lines=True)
             if rewrite["suggested_skills_section"]:
                 st.subheader("Suggested Skills Changes")
                 for heading, tools in rewrite["suggested_skills_section"].items():
@@ -83,18 +80,24 @@ def render() -> None:
                 st.subheader("Skills Section")
                 st.write(skills_change_message)
             st.metric("Improved ATS Estimate", rewrite["improved_ats_estimate"])
-            st.subheader("Evidence")
-            st.json(rewrite["evidence_map"])
+            #st.subheader("Evidence")
+            #st.json(rewrite["evidence_map"])
 
-        with tab_message:
-            message = result["linkedin_message"]
+            st.divider()
+            st.subheader("Outreach Message")
             if message.get("used_llm"):
                 st.success("Outreach mode: Gemini-assisted message")
             elif message.get("fallback_reason"):
                 st.warning(f"Outreach mode: deterministic fallback ({message['fallback_reason']})")
             st.subheader("Hiring Manager Message")
-            st.caption("Use the built-in copy icon in the top-right of the message box.")
+            #st.caption("Use the built-in copy icon in the top-right of the message box.")
             st.code(message["hiring_manager_message"], language=None, wrap_lines=True)
+
+        with tab_input:
+            st.subheader("Parsed CV")
+            st.json(result["cv_document"])
+            st.subheader("Parsed Job Description")
+            st.json(result["job_description"])
 
 
 if __name__ == "__main__":

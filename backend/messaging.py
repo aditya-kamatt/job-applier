@@ -13,7 +13,7 @@ def _compose_hiring_manager_message(
     company = f" at {job_description.company_name}" if job_description.company_name else ""
     return (
         f"Hi [Hiring manager's name],\n\n"
-        f"I hope you are doing well. I came across the {role} role{company} in [location] and wanted to reach out directly.\n\n"
+        f"I hope you are doing well. I came across the {role} role{company} and wanted to reach out directly.\n\n"
         f"{body.strip()}\n\n"
         f"I have applied for the job on LinkedIn and have also attached my CV for your reference below. "
         f"We can have a chat to discuss more about the role and how it aligns with my experiences. "

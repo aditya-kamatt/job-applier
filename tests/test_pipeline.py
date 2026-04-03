@@ -193,7 +193,7 @@ class AnalysisAndRewriteTests(unittest.TestCase):
         self.assertEqual(rewrite.skills_change_message, "No changes required in the Skills section.")
         self.assertIn("experience", rewrite.locked_sections)
         self.assertNotIn("experience", rewrite.editable_sections)
-        self.assertIn("postgresql", rewrite.missing_but_not_inserted)
+        self.assertIn("PostgreSQL", rewrite.missing_but_not_inserted)
         self.assertFalse(rewrite.used_llm)
         self.assertIsNotNone(rewrite.fallback_reason)
 
@@ -204,8 +204,39 @@ class AnalysisAndRewriteTests(unittest.TestCase):
 
         self.assertGreater(fit.overall_fit_score, 0)
         self.assertGreater(fit.estimated_ats_score, 0)
-        self.assertIn("langchain", fit.missing_keywords)
+        self.assertIn("LangChain", fit.missing_keywords)
         self.assertIn("summary", fit.editable_recommendations)
+
+    def test_missing_keywords_use_canonical_synonyms(self) -> None:
+        cv_text = """
+Summary
+AI engineer building LLM systems and RAG workflows.
+
+Experience
+- Built production-grade AI services.
+
+Education
+B.Tech in Computer Science
+
+Projects
+- Developed retrieval workflows for knowledge systems.
+
+Skills
+◦ LLM & Agentic AI:
+– LLMs
+– RAG
+"""
+        jd_text = """
+Required: Large Language Models, Retrieval-Augmented Generation, PostgreSQL, PostgreSQL.
+Preferred: LangChain.
+"""
+        cv = parse_cv(cv_text)
+        jd = parse_job_description(jd_text)
+        fit = analyze_fit(cv, jd)
+        self.assertNotIn("Large Language Models", fit.missing_keywords)
+        self.assertNotIn("Retrieval-Augmented Generation", fit.missing_keywords)
+        self.assertIn("PostgreSQL", fit.missing_keywords)
+        self.assertEqual(fit.missing_keywords.count("PostgreSQL"), 1)
 
     def test_llm_path_preserves_existing_subsections_only(self) -> None:
         cv = parse_cv(PDF_STYLE_CV)

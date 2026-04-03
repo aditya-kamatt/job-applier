@@ -50,13 +50,18 @@ class GeminiRewriteClient:
                 "temperature": 0.2,
             },
         }
-        response = httpx.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
-            params={"key": self.api_key},
-            headers={"Content-Type": "application/json"},
-            json=payload,
-            timeout=30.0,
-        )
+        try:
+            response = httpx.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+                params={"key": self.api_key},
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=30.0,
+            )
+        except httpx.ReadTimeout as exc:
+            raise GeminiRewriteError("Gemini request timed out while generating the summary rewrite.") from exc
+        except httpx.RequestError as exc:
+            raise GeminiRewriteError(f"Gemini request failed due to a network error: {exc}") from exc
         if response.status_code >= 400:
             try:
                 error_data = response.json()
@@ -109,13 +114,18 @@ class GeminiRewriteClient:
                 "temperature": 0.3,
             },
         }
-        response = httpx.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
-            params={"key": self.api_key},
-            headers={"Content-Type": "application/json"},
-            json=payload,
-            timeout=30.0,
-        )
+        try:
+            response = httpx.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+                params={"key": self.api_key},
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=30.0,
+            )
+        except httpx.ReadTimeout as exc:
+            raise GeminiRewriteError("Gemini request timed out while generating the outreach message.") from exc
+        except httpx.RequestError as exc:
+            raise GeminiRewriteError(f"Gemini request failed due to a network error: {exc}") from exc
         if response.status_code >= 400:
             try:
                 error_data = response.json()

@@ -1,7 +1,5 @@
-
-# job-applier
-
 # ApplyAI
+
 
 ApplyAI is a greenfield MVP for optimizing job applications. It parses a CV and job description, scores role fit and ATS alignment, suggests grounded improvements to the `Summary` and `Skills` sections only, and generates outreach messages.
 
@@ -24,4 +22,4 @@ ApplyAI is a greenfield MVP for optimizing job applications. It parses a CV and 
 - The core pipeline is deterministic-first and dependency-light.
 - LLM integration points are isolated behind a provider client so Gemini-backed rewriting can fall back safely when no API key is configured.
 - Only `Summary` and `Skills` are editable outputs. All other CV sections are locked.
->>>>>>> 71f2376 (Initial commit)
+

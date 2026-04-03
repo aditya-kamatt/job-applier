@@ -5,6 +5,7 @@ from math import ceil
 from shared.models import CVDocument, FitAnalysis, JobDescription, ScoreBreakdown
 
 from .config import settings
+from .text_utils import canonicalize_term_list, canonicalize_technical_terms, display_label_for_term
 
 
 def _score_overlap(have: set[str], wanted: set[str]) -> int:
@@ -14,10 +15,11 @@ def _score_overlap(have: set[str], wanted: set[str]) -> int:
 
 
 def _collect_cv_skills(cv_document: CVDocument) -> set[str]:
-    direct = {item.skill for item in cv_document.technologies}
-    skills_text = cv_document.skills.text.lower()
-    direct.update(part.strip().lower() for part in skills_text.replace("\n", ",").split(",") if part.strip())
-    return {item for item in direct if item}
+    direct: set[str] = set()
+    for subsection in cv_document.skills_subsections:
+        direct.update(canonicalize_term_list(subsection.tools))
+    direct.update(canonicalize_term_list([item.skill for item in cv_document.technologies]))
+    return direct
 
 
 def _seniority_score(cv_document: CVDocument, job_description: JobDescription) -> tuple[int, list[str]]:
@@ -51,16 +53,16 @@ def _keyword_coverage(cv_document: CVDocument, jd: JobDescription) -> tuple[int,
             cv_document.publications.text.lower(),
         ]
     )
-    matched = [keyword for keyword in jd.required_skills + jd.tools_frameworks if keyword.lower() in corpus]
-    wanted = set(jd.required_skills + jd.tools_frameworks)
-    return _score_overlap(set(matched), wanted), sorted(set(matched))
+    matched = canonicalize_technical_terms(corpus)
+    wanted = canonicalize_term_list(jd.required_skills + jd.tools_frameworks)
+    return _score_overlap(matched, wanted), [display_label_for_term(item) for item in sorted(matched & wanted)]
 
 
 def analyze_fit(cv_document: CVDocument, job_description: JobDescription) -> FitAnalysis:
     cv_skills = _collect_cv_skills(cv_document)
-    jd_required = {skill.lower() for skill in job_description.required_skills}
-    jd_preferred = {skill.lower() for skill in job_description.preferred_skills}
-    jd_tools = {tool.lower() for tool in job_description.tools_frameworks}
+    jd_required = canonicalize_term_list(job_description.required_skills)
+    jd_preferred = canonicalize_term_list(job_description.preferred_skills)
+    jd_tools = canonicalize_term_list(job_description.tools_frameworks)
 
     skill_match = _score_overlap(cv_skills, jd_required or jd_tools)
     experience_relevance = _score_overlap(
@@ -84,7 +86,7 @@ def analyze_fit(cv_document: CVDocument, job_description: JobDescription) -> Fit
     )
     ats = min(100, round((skill_match * 0.45) + (keyword_coverage * 0.40) + (seniority_fit * 0.15)))
 
-    missing_keywords = sorted((jd_required | jd_tools | jd_preferred) - cv_skills)
+    missing_keywords = [display_label_for_term(item) for item in sorted((jd_required | jd_tools | jd_preferred) - cv_skills)]
     strong_sections: list[str] = []
     weak_sections: list[str] = []
     section_evidence: dict[str, list[str]] = {}
@@ -102,7 +104,10 @@ def analyze_fit(cv_document: CVDocument, job_description: JobDescription) -> Fit
 
     if cv_document.skills.text:
         strong_sections.append("skills")
-        section_evidence["skills"] = sorted(cv_skills & (jd_required | jd_tools | jd_preferred))
+        section_evidence["skills"] = [
+            display_label_for_term(item)
+            for item in sorted(cv_skills & (jd_required | jd_tools | jd_preferred))
+        ]
     else:
         weak_sections.append("skills")
         section_evidence["skills"] = ["Skills section is empty."]
