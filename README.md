@@ -1,6 +1,6 @@
-<<<<<<< HEAD
+
 # job-applier
-=======
+
 # ApplyAI
 
 ApplyAI is a greenfield MVP for optimizing job applications. It parses a CV and job description, scores role fit and ATS alignment, suggests grounded improvements to the `Summary` and `Skills` sections only, and generates outreach messages.
