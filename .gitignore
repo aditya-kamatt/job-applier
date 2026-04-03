@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+.venv/
+.streamlit/
+data/
+__pycache__/
+*.pyc

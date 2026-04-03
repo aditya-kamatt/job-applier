@@ -1,6 +1,18 @@
-<<<<<<< HEAD
-# job-applier
-=======
+Metadata-Version: 2.4
+Name: applyai
+Version: 0.1.0
+Summary: AI job application optimisation platform MVP
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: uvicorn<1.0,>=0.30
+Requires-Dist: streamlit<2.0,>=1.43
+Requires-Dist: pydantic<3.0,>=2.8
+Requires-Dist: httpx<1.0,>=0.27
+Requires-Dist: python-multipart<1.0,>=0.0.9
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.2; extra == "dev"
+
 # ApplyAI
 
 ApplyAI is a greenfield MVP for optimizing job applications. It parses a CV and job description, scores role fit and ATS alignment, suggests grounded improvements to the `Summary` and `Skills` sections only, and generates outreach messages.
@@ -22,6 +34,5 @@ ApplyAI is a greenfield MVP for optimizing job applications. It parses a CV and 
 ## Notes
 
 - The core pipeline is deterministic-first and dependency-light.
-- LLM integration points are isolated behind a provider client so Gemini-backed rewriting can fall back safely when no API key is configured.
+- LLM integration points are stubbed behind services so an OpenAI client can be added without changing API shapes.
 - Only `Summary` and `Skills` are editable outputs. All other CV sections are locked.
->>>>>>> 71f2376 (Initial commit)
